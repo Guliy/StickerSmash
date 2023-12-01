@@ -33,3 +33,11 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# clojure
+.clj-kondo/
+.lsp/
+.nrepl-port
+
+#dev
+out-js/
