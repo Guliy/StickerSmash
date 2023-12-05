@@ -20,8 +20,8 @@
         image-style (useAnimatedStyle #(-> {:width (withSpring scale-image.value)
                                             :height (withSpring scale-image.value)}))
         container-style (useAnimatedStyle #(-> {:transform
-                                                [{:translate-x translate-x.value}
-                                                 {:translate-y translate-y.value}]}))]
+                                                [{:translateX translate-x.value}
+                                                 {:translateY translate-y.value}]}))]
 
     #jsx [GestureDetector {:gesture drag}
           [Animated.View {:style [container-style {:top -350}]}
