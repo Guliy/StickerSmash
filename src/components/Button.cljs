@@ -1,16 +1,14 @@
 (ns components.Button
-  (:require ["react-native" :refer [View Text Pressable StyleSheet]]
-            ["@expo/vector-icons/FontAwesome$default" :as FontAwesome]))
-
-(declare styles)
+  (:require ["@expo/vector-icons/FontAwesome$default" :as FontAwesome]
+            ["react-native" :refer [View Text Pressable StyleSheet]]))
 
 (defn Button
-  [{:keys [label theme]}]
-  (if (= theme "primary")
-    #jsx [View {:style (merge styles.buttonContainer
-                              {:borderWidth 4 :borderColor "#ffd33d" :borderRadius 18})}
+  [{:keys [label theme onPress]}]
+  (if (= "primary" theme)
+    #jsx [View {:style [styles.buttonContainer
+                        {:borderWidth 4 :borderColor "#ffd33d" :borderRadius 18}]}
           #jsx [Pressable {:style  (merge styles.button {:backgroundColor "#fff"})
-                           :onPress (fn [] (js/alert "You pressed a Primary button "))}
+                           :onPress onPress}
                 [FontAwesome {:name "picture-o"
                               :size 18
                               :color "#25292e"
@@ -19,8 +17,8 @@
 
     #jsx  [View {:style styles.buttonContainer}
            [Pressable {:style styles.button
-                       :onPress (fn [] (js/alert "You pressed a button"))}
-            [Text {:style (do [styles.buttonLabel {:color "red"}])} label]]]))
+                       :onPress onPress}
+            [Text {:style [styles.buttonLabel {:color "#fff"}]} label]]]))
 
 (def styles
   (StyleSheet.create
@@ -38,7 +36,7 @@
      :height "100%"
      :alignItems "center"
      :justifyContent "center"
-     :flex-direction "row"}
+     :flexDirection "row"}
 
     :buttonIcon
     {:paddingRight 8}

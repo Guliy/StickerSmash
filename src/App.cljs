@@ -1,32 +1,1 @@
-(ns App
-  (:require ["react-native" :refer [Text View StyleSheet Image]]
-            ["expo-status-bar" :refer [StatusBar]]
-            ["../assets/images/background-image.png$default" :as PlaceholderImage]
-            ["./components/ImageViewer" :refer [ImageViewer]]
-            ["./components/Button" :refer [Button]]))
-
-(def styles
-  (StyleSheet.create
-   {:container  {:flex 1
-                 :backgroundColor "#25292e"
-                 :alignItems "center"}
-    :imageContainer {:flex 1
-                     :paddingTop 58}
-    :image {:width 320
-            :height 440
-            :borderRadius 18}
-    :footerContainer
-    {:flex 1/3
-     :alignItems "center"}}))
-
-(defn App []
-  #jsx [:View {:style styles.container}
-        [:View {:style styles.imageContainer}
-         [ImageViewer {:placeholderImageSource PlaceholderImage}]]
-        [:View {:style styles.footerContainer}
-         [:Button {:label "Choose a proto!" :theme "primary"}]
-         [:Button {:label "Use this photo"}]]
-
-        [:StatusBar {:style "auto"}]])
-
-(def default App)
+(ns App  (:require ["../assets/images/background-image.png$default" :as placeholder-image]            ["./components/Button" :refer [Button]]            ["./components/CircleButton" :refer [CircleButton]]            ["./components/EmojiList" :refer [EmojiList]]            ["./components/EmojiPicker" :refer [EmojiPicker]]            ["./components/EmojiSticker" :refer [EmojiSticker]]            ["./components/IconButton" :refer [IconButton]]            ["./components/ImageViewer" :refer [ImageViewer]]            ["dom-to-image$default" :as domtoimage]            ["expo-image-picker" :as ImagePicker]            ["expo-media-library" :as MediaLibrary]            ["expo-status-bar" :refer [StatusBar]]            ["react" :refer [useState useRef]]            ["react-native" :refer [View StyleSheet Platform]]            ["react-native-gesture-handler" :refer [GestureHandlerRootView]]            ["react-native-view-shot" :refer [captureRef]]))(defn ^:async pick-image-async [set-img-fn set-show-app-ops-fn]  (let [res (js-await (ImagePicker.launchImageLibraryAsync                       {:allowsEditing true                        :quality 1}))]    (when-not res.canceled      (set-img-fn (-> res.assets first .-uri))      (set-show-app-ops-fn true))))(defn ^:async on-save-image-async [image-ref]  (if (not= Platform.OS  "web")    (let [local-uri (js-await (captureRef image-ref {:height 440, :quality 1}))]      (js-await (MediaLibrary.saveToLibraryAsync local-uri))      (when local-uri        (js/alert "Saved")))    (let [data-url (js-await (domtoimage.toJpeg image-ref.current                                                {:quality 0.95                                                 :width 320                                                 :height 440}))]      (doto (js/document.createElement "a")        (set! -download "sticker-smash.jpeg")        (set! -href data-url)        (.click)))))(defn App []  (let [[selected-image set-selected-image] (useState nil)        [show-app-ops set-show-app-ops] (useState false)        [is-modal-visible set-is-modal-visible] (useState false)        [picked-emoji set-picked-emoji]  (useState nil);        [permission-status request-permission]  (MediaLibrary.usePermissions);        image-ref  (useRef)        on-reset #(do                    (set-show-app-ops false)                    (set-picked-emoji nil)                    (set-selected-image nil))        on-add-sticker (partial set-is-modal-visible true)        on-modal-close (partial set-is-modal-visible false)]    (when (= permission-status nil) (request-permission))    #jsx [GestureHandlerRootView {:style styles.container}          [View {:style styles.imageContainer}           [View {:ref image-ref :collapsable false}            [ImageViewer {:placeholderImageSource placeholder-image                          :selectedImage selected-image}]            (when (some? picked-emoji)              #jsx [EmojiSticker {:imageSize 40 :stickerSource picked-emoji}])]]          (if show-app-ops            #jsx [View {:style styles.optionsContainer}                  [View {:style styles.optionsRow}                   [IconButton {:icon :refresh :label "Reset" :onPress on-reset}]                   [CircleButton {:onPress on-add-sticker}]                   [IconButton {:icon :save-alt :label "Save" :onPress (partial on-save-image-async image-ref)}]]]            #jsx [View {:style styles.footerContainer}                  [Button {:label "Choose a proto!"                           :theme "primary"                           :onPress (partial pick-image-async set-selected-image set-show-app-ops)}]                  [Button {:label "Use this photo" :onPress (partial set-show-app-ops true)}]])          [EmojiPicker {:isVisible is-modal-visible :onClose on-modal-close}           [EmojiList {:onSelect set-picked-emoji :onCloseModal on-modal-close}]]          [StatusBar {:style "light"}]]))(def styles  (StyleSheet.create   {:container  {:flex 1                 :backgroundColor "#25292e"                 :alignItems :center}    :imageContainer {:flex 1                     :paddingTop 58}    :image {:width 320            :height 440            :borderRadius 18}    :footerContainer    {:flex 1/3     :alignItems :center}    :optionsContainer    {:position :absolute     :bottom 80}    :optionsRow    {:alignItems :center     :flexDirection :row}}))(def default App)
